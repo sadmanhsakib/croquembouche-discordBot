@@ -1,0 +1,11 @@
+[project]
+name = "croquembouche-discordbot"
+version = "0.1.0"
+description = " A stateful Discord automation system with event-driven activity tracking, persistent countdown scheduling, and runtime-configurable behavior — built around a PostgreSQL-backed architecture that survives process restarts without state loss."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "discord>=2.3.2",
+    "dotenv>=0.9.9",
+]
