@@ -1,7 +1,8 @@
 import datetime
 import discord
-import config
 from discord.ext import commands
+import bot_commands
+import config
 from database import db
 
 # giving the permissions
@@ -93,42 +94,16 @@ async def on_presence_update(before, after):
                 # getting the date from the message creation time
                 last_msg_date = str(message.created_at + datetime.timedelta(hours=6)).split(' ')[0]
 
-            # if the last countdown reminder wasn't sent on a date
             if last_msg_date != today:
-                countdown_counter = 0
+                await bot_commands.get_countdowns(bot, countdown_channel)
 
-                # sends a message for each countdowns
-                for key in config.countdown_dict.keys():
-                    countdown_counter += 1
-                    time_left = time_difference(today, config.countdown_dict[key])
-                    await countdown_channel.send(f"{countdown_counter}. {key} : {config.countdown_dict[key]} -> {time_left}")
-                    
         elif old_status != "offline" and new_status == "offline" and config.should_log:
             # getting the opening time from the database
             opening_time = await db.get_log()
-            active_time = time_difference(opening_time, now)
-            
+            active_time = bot_commands.time_difference(opening_time, now)
+
             # updating the database
             await db.set_log(opening_time, now, active_time)
-                           
-
-def time_difference(starting, now):
-    # if starting contains time too
-    if len(starting.split(' ')) == 2:
-        # converting the time in datetime
-        time1 = datetime.datetime.strptime(starting, TIME_FORMAT)
-        time2 = datetime.datetime.strptime(now, TIME_FORMAT)
-        active_time = str(time2 - time1)
-    else:
-        # converting the time in datetime
-        time1 = datetime.datetime.strptime(starting, "%Y-%m-%d")
-        time2 = datetime.datetime.strptime(now.split(' ')[0], "%Y-%m-%d")
-        duration = time2 - time1
-
-        # writing only remaining days as time is unavailable
-        active_time = str(duration.days) + " days"
-
-    return active_time
 
 
 # starts the bot

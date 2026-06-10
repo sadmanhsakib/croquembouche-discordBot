@@ -1,8 +1,9 @@
+import datetime
 import json
 import discord
+from discord.ext import commands
 import config
 from database import db
-from discord.ext import commands
 
 class BotCommands(commands.Cog):
     def __init__(self, bot):
@@ -24,6 +25,17 @@ class BotCommands(commands.Cog):
     async def list_countdown(self, ctx):
         await ctx.send(f"List of countdowns: {list(config.countdown_dict.keys())}")
 
+    @commands.command(name="get_countdowns")
+    async def get_countdowns(self, ctx):
+        today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=6), name="GMT +6")).strftime("%Y-%m-%d")
+
+        # sending countdown messages
+        for index, key in enumerate(config.countdown_dict.keys(), 1):
+            time_left = time_difference(
+                today, config.countdown_dict[key]
+            )
+            await ctx.send(f"{index}. {key} : {config.countdown_dict[key]} -> {time_left}")
+
     @commands.command(name="help")
     async def help_command(self, ctx):
         embed = discord.Embed(
@@ -36,9 +48,12 @@ class BotCommands(commands.Cog):
         embed.add_field(
             name="\n📝 General Commands: ",
             value=f"`{config.prefix}bonjour` - Greets the user.\n"
-            f"`{config.prefix}status` - Returns the status of the bot.\n"
+            f"`{config.prefix}get_countdowns` - Returns the countdowns from the database.\n"
+            f"`{config.prefix}help` - Gives a small introduction of each commands.\n"
+            f"`{config.prefix}list` - Returns the list of countdown names.\n"
             f"`{config.prefix}ping` - Returns the latency of the BOT in milliseconds.\n"
-            f"`{config.prefix}list` - Returns the list of countdown names.\n",
+            f"`{config.prefix}reload` - Reloads the bot data from the database.\n"
+            f"`{config.prefix}status` - Returns the status of the bot.\n",
             inline=False,
         )
 
@@ -79,7 +94,7 @@ class BotCommands(commands.Cog):
 
             # adding the countdown to the dictionary
             config.countdown_dict.update({name: date})
-            
+
             # sorting the dictionary by value (date)
             config.countdown_dict = dict(sorted(
                 config.countdown_dict.items(), key=lambda item: item[1]
@@ -142,7 +157,7 @@ class BotCommands(commands.Cog):
                 case "COUNTDOWN_CHANNEL_ID":
                     config.countdown_channel_id = int(value)
                     shouldUpdate = True
-                
+
             if shouldUpdate:
                 await db.set_variable(variable, value)
                 await ctx.send(f"Successful. {variable} set to {value}")
@@ -155,7 +170,25 @@ class BotCommands(commands.Cog):
                 f"Invalid. Correct Syntax: `{config.prefix}set VARIABLE VALUE`"
             )
 
-    
+
+def time_difference(starting_time, end_time):
+    # if starting contains time too
+    if len(starting_time.split(' ')) == 2:
+        # converting the time in datetime
+        time1 = datetime.datetime.strptime(starting_time, TIME_FORMAT)
+        time2 = datetime.datetime.strptime(end_time, TIME_FORMAT)
+        active_time = str(time2 - time1)
+    else:
+        # converting the time in datetime
+        time1 = datetime.datetime.strptime(starting_time, "%Y-%m-%d")
+        time2 = datetime.datetime.strptime(end_time.split(' ')[0], "%Y-%m-%d")
+        duration = time2 - time1
+
+        # writing only remaining days as time is unavailable
+        active_time = str(duration.days) + " days"
+    return active_time
+
+
 async def setup(bot):
     await bot.add_cog(BotCommands(bot))
     print("✅Bot Commands loaded")
