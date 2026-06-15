@@ -34,4 +34,4 @@ async def set_default_values():
     await db.set_variable("COUNTDOWN_CHANNEL_ID", "0")
     await db.set_variable("COUNTDOWN_DATES", '{}')
 
-    print("✅Successfully set the default values!")
+    print("✅ Successfully set the default values!")

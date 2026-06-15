@@ -18,6 +18,7 @@ def get_prefix(bot, message):
     return config.prefix
 
 bot = commands.Bot(command_prefix=get_prefix, intents=intents, help_command=None)
+bot_cmds = bot_commands.BotCommands(bot)
 
 @bot.event
 # when the bot starts
@@ -38,7 +39,7 @@ async def on_ready():
         await config.load_data()
 
     # prints a message in console when ready
-    print(f"✅Logged in as: {bot.user}")
+    print(f"✅ Logged in as: {bot.user}")
 
 
 @bot.event
@@ -84,7 +85,7 @@ async def on_presence_update(before, after):
         if old_status == "offline" and new_status != "offline":
             last_msg_date = ""
             today = now.split(' ')[0]
-            
+
             if config.should_log:
                 # updating the database with the current opening time
                 await db.set_log(now, "0", "0")
@@ -95,7 +96,7 @@ async def on_presence_update(before, after):
                 last_msg_date = str(message.created_at + datetime.timedelta(hours=6)).split(' ')[0]
 
             if last_msg_date != today:
-                await bot_commands.get_countdowns(bot, countdown_channel)
+                await bot_cmds.get_countdowns(bot, countdown_channel)
 
         elif old_status != "offline" and new_status == "offline" and config.should_log:
             # getting the opening time from the database
