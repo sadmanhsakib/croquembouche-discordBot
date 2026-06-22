@@ -1,5 +1,5 @@
-import datetime
 import discord
+from datetime import datetime, timezone, timedelta
 from discord.ext import commands
 import bot_commands
 import config
@@ -70,10 +70,10 @@ async def on_presence_update(before, after):
     countdown_channel = bot.get_channel(countdown_channel_id)
 
     # defining the timezone
-    offset = datetime.timedelta(hours=6)
+    offset = timedelta(hours=6)
 
     # getting the current time
-    now = datetime.datetime.now(datetime.timezone(offset, name="GMT +6")).strftime(bot_commands.TIME_FORMAT)
+    now = datetime.now(timezone(offset, name="GMT +6")).strftime(bot_commands.TIME_FORMAT)
 
     # checking if it's the user or other members
     if after.id == config.USER_ID:
@@ -82,19 +82,19 @@ async def on_presence_update(before, after):
 
         # if the user comes online
         if old_status == "offline" and new_status != "offline":
-            last_msg_date = ""
-            today = now.split(' ')[0]
-
             if config.should_log:
                 # updating the database with the current opening time
                 await db.set_log(now, "0", "0")
-
+            
+            should_send_countdown_message = True
+            
             # getting the last time when a message was send in countdown channel
-            async for message in countdown_channel.history(limit=1): 
-                # getting the date from the message creation time
-                last_msg_date = str(message.created_at + datetime.timedelta(hours=6)).split(' ')[0]
-
-            if last_msg_date != today:
+            async for message in countdown_channel.history(
+                after=datetime.now(timezone(offset)).replace(hour=0, minute=0, second=0, microsecond=0)
+                ):
+                if message.embeds:
+                    should_send_countdown_message = False
+            if should_send_countdown_message:
                 await bot_cmds.get_countdowns(bot, countdown_channel)
 
         elif old_status != "offline" and new_status == "offline" and config.should_log:
