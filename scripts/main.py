@@ -12,7 +12,6 @@ intents.messages = True
 intents.presences = True
 intents.members = True
 
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def get_prefix(bot, message):
     return config.prefix
@@ -74,7 +73,7 @@ async def on_presence_update(before, after):
     offset = datetime.timedelta(hours=6)
 
     # getting the current time
-    now = datetime.datetime.now(datetime.timezone(offset, name="GMT +6")).strftime(TIME_FORMAT)
+    now = datetime.datetime.now(datetime.timezone(offset, name="GMT +6")).strftime(bot_commands.TIME_FORMAT)
 
     # checking if it's the user or other members
     if after.id == config.USER_ID:

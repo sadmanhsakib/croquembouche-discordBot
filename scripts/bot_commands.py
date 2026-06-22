@@ -5,6 +5,9 @@ from discord.ext import commands
 import config
 from database import db
 
+
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 class BotCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -27,6 +30,7 @@ class BotCommands(commands.Cog):
 
     @commands.command(name="get_countdowns")
     async def get_countdowns(self, ctx):
+        values = []
         today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=6), name="GMT +6")).strftime("%Y-%m-%d")
 
         # sending countdown messages
@@ -34,14 +38,27 @@ class BotCommands(commands.Cog):
             time_left = time_difference(
                 today, config.countdown_dict[key]
             )
-            await ctx.send(f"{index}. {key} : {config.countdown_dict[key]} -> {time_left}")
+            values.append(f"#{index}. **{key}** : {config.countdown_dict[key]} -> **{time_left}**")
 
+        embed = discord.Embed(
+            title=f"DATE: {today}",
+            color=0x2479f0
+        )
+
+        # adding the general commands
+        embed.add_field(
+            name="\n🚨 Countdown Timers: ",
+            value="\n".join(values),
+            inline=False
+        )
+        await ctx.send(embed=embed)
+            
     @commands.command(name="help")
     async def help_command(self, ctx):
         embed = discord.Embed(
             title="🤖 Bot Help Menu",
             description="Here are all available commands:",
-            color=0x00ff00
+            color=0xb22222
         )
 
         # adding the general commands
@@ -54,7 +71,7 @@ class BotCommands(commands.Cog):
             f"`{config.prefix}ping` - Returns the latency of the BOT in milliseconds.\n"
             f"`{config.prefix}reload` - Reloads the bot data from the database.\n"
             f"`{config.prefix}status` - Returns the status of the bot.\n",
-            inline=False,
+            inline=False
         )
 
         # adding the complex commands
